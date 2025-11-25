@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
-import { getRandomSignal } from "../services/getRandomSignal";
-import { signalController } from "../controller/gameController";
+import GameModel from "../model/signalModel";
+import GameController from "../controller/gameController";
+
+const controller = new GameController(new GameModel());
 
 export default function GamePage() {
   const [round, setRound] = useState(null);
 
-  async function loadRound() {
-    const correctSignal = await getRandomSignal();
-
-    const newRound = await signalController.builRound(correctSignal);
-
-    setRound(newRound);
+  async function generateRound() {
+    const result = await controller.createRound();
+    setRound(result);
   }
 
   useEffect(() => {
-    loadRound();
+    //generateRound();
   }, []);
 
   // Paleta de cores pré-definida
@@ -49,7 +48,7 @@ export default function GamePage() {
             } else {
               alert("❌ ERROU!");
             }
-            loadRound();
+            generateRound();
           }}
           className="w-full h-full flex items-center justify-center 
                    relative cursor-pointer 

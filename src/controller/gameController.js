@@ -1,40 +1,42 @@
-import { supabase } from "../services/supabase";
-import { Signal } from "../model/signalModel";
+export default class GameController {
+  constructor(model) {
+    this.model = model;
+    this.usedCorrectWords = new Set();
+  }
 
-class SignalController {
-  async builRound(correctSignal) {
-    if (!correctSignal) return null;
+  async createRound() {
+    const allSignals = await this.model.getAllSignals();
 
-    const wrongOptions = await this.getWrongOptions(correctSignal.id, 3);
+    const availableCorrects = allSignals.filter(
+      (item) => !this.usedCorrectWords.has(item.palavra)
+    );
 
-    const all = [correctSignal, ...wrongOptions];
+    if (availableCorrects.length == 0) {
+      throw new Error("Não há mais palavras");
+    }
 
-    const options = this.shuffle(all);
+    const correctItem =
+      availableCorrects[Math.floor(Math.random() * availableCorrects.length)];
+
+    this.usedCorrectWords.add(correctItem.palavra);
+
+    const incorrectPool = allSignals.filter(
+      (item) => item.palavra !== correctItem.palavra
+    );
+
+    const incorrectItem = incorrectPool
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    const options = [
+      correctItem.palavra,
+      ...incorrectItem.map((item) => item.palavra),
+    ].sort(() => Math.random() - 0.5);
 
     return {
-      correct: correctSignal,
+      video: correctItem.video,
+      palavra: correctItem.palavra,
       options,
     };
   }
-
-  async getWrongOptions(excludeId, limit = 3) {
-    const { data, error } = await supabase
-      .from("videos-libas")
-      .select("*")
-      .neq("id", excludeId)
-      .limit(limit);
-
-    if (error) {
-      console.log("Erro ao buscar opções: ", error);
-      return [];
-    }
-
-    return data.map((row) => new Signal(row));
-  }
-
-  shuffle(arr) {
-    return arr.sort(() => Math.random() - 0.5);
-  }
 }
-
-export const signalController = new SignalController();

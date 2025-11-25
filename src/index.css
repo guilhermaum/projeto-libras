@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Nabana";
+  src: url("./assets/fonts/Nabana-Shadow.ttf");
+}
+
+@font-face {
+  font-family: "Nabana Regular";
+  src: url("./assets/fonts/Nabana-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Wonderful";
+  src: url("./assets/fonts/WonderfulSnowflakeRegular-1jVA2.otf");
+}
+
+@layer utilities {
+  .text-outline {
+    -webkit-text-stroke: 3px black;
+  }
+}
+
+@theme {
+  --font-nabana: "Nabana", sans-serif;
+  --font-nabanar: "Nabana Regular", sans-serif;
+  --font-wonderful: "Wonderful", sans-serif;
+}

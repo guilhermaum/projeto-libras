@@ -26,3 +26,14 @@
   --font-nabanar: "Nabana Regular", sans-serif;
   --font-wonderful: "Wonderful", sans-serif;
 }
+
+.word-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.word-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}

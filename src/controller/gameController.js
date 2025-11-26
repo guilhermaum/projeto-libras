@@ -1,14 +1,37 @@
+import GameModel from "../model/signalModel";
+
 export default class GameController {
-  constructor(model) {
-    this.model = model;
+  constructor() {
+    this.model = new GameModel();
+    this.signals = [];
     this.usedCorrectWords = new Set();
+    this.currentIndex = 0;
+    this.rounds = [];
   }
 
-  async createRound() {
-    const allSignals = await this.model.getAllSignals();
+  async loadSignals() {
+    if (this.signals.length === 0) {
+      this.signals = await this.model.getAllSignals();
+    }
+  }
 
-    const availableCorrects = allSignals.filter(
-      (item) => !this.usedCorrectWords.has(item.palavra)
+  async initGame() {
+    await this.loadSignals();
+
+    this.usedCorrectWords.clear();
+    this.rounds = [];
+    this.currentIndex = 0;
+
+    for (let i = 0; i < this.signals.length; i++) {
+      this.rounds.push(this._createRoundInternal());
+    }
+
+    return this.rounds;
+  }
+
+  _createRoundInternal() {
+    const availableCorrects = this.signals.filter(
+      (s) => !this.usedCorrectWords.has(s.palavra)
     );
 
     if (availableCorrects.length === 0) {
@@ -20,17 +43,14 @@ export default class GameController {
 
     this.usedCorrectWords.add(correctItem.palavra);
 
-    const incorrectPool = allSignals.filter(
-      (item) => item.palavra !== correctItem.palavra
-    );
-
-    const incorrectItems = incorrectPool
+    const incorrect = this.signals
+      .filter((s) => s.palavra !== correctItem.palavra)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
 
-    const options = [correctItem, ...incorrectItems]
+    const option = [correctItem, ...incorrect]
       .map((item) => ({
-        id: item.palavra, // identificador único
+        id: item.palavra,
         palavra: item.palavra,
       }))
       .sort(() => Math.random() - 0.5);
@@ -41,7 +61,23 @@ export default class GameController {
         palavra: correctItem.palavra,
         video: correctItem.video,
       },
-      options,
+      option,
     };
+  }
+
+  getCurrentRound() {
+    return this.rounds[this.currentIndex] || null;
+  }
+
+  nextRound() {
+    if (this.currentIndex + 1 < this.rounds.length) {
+      this.currentIndex++;
+      return this.getCurrentRound();
+    }
+    return null;
+  }
+
+  validateAnswer(optionId) {
+    return optionId === this.getCurrentRound().correct.id;
   }
 }

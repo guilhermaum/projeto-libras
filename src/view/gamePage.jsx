@@ -2,19 +2,46 @@ import { useEffect, useState } from "react";
 import GameModel from "../model/signalModel";
 import GameController from "../controller/gameController";
 
-const controller = new GameController(new GameModel());
-
 export default function GamePage() {
+  const [rounds, setRounds] = useState([]);
   const [round, setRound] = useState(null);
-
-  async function generateRound() {
-    const result = await controller.createRound();
-    setRound(result);
-  }
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    //generateRound();
+    async function setAllRounds() {
+      try {
+        const model = new GameModel();
+        const gameController = new GameController(model);
+        const signals = await model.getAllSignals();
+
+        const results = [];
+
+        for (let i = 0; i < signals.length; i++) {
+          const round = await gameController.createRound();
+          results.push(round);
+        }
+
+        setRounds(results);
+        setRound(results[0]);
+      } catch (err) {
+        console.error("Erro:", err);
+        setError(err.message);
+      }
+    }
+
+    setAllRounds();
   }, []);
+
+  function generateRound() {
+    const index = rounds.indexOf(round);
+    const next = index + 1;
+
+    if (next < rounds.length) {
+      setRound(rounds[next]);
+    } else {
+      alert("Acabou o jogo!");
+    }
+  }
 
   // Paleta de cores pré-definida
   const COLOR_SET = [
@@ -34,11 +61,11 @@ export default function GamePage() {
 
   const [colors] = useState(() => shuffleColors());
 
+  if (error) return <p>Erro: {error}</p>;
   if (!round) return <p>Carregando...</p>;
 
   return (
     <div className="w-screen h-screen grid grid-cols-2 grid-rows-2 relative select-none">
-      {/* 🔹 Quatro áreas clicáveis */}
       {round.options.map((option, index) => (
         <div
           key={option.id}

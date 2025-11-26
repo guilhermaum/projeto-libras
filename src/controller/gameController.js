@@ -11,7 +11,7 @@ export default class GameController {
       (item) => !this.usedCorrectWords.has(item.palavra)
     );
 
-    if (availableCorrects.length == 0) {
+    if (availableCorrects.length === 0) {
       throw new Error("Não há mais palavras");
     }
 
@@ -24,18 +24,23 @@ export default class GameController {
       (item) => item.palavra !== correctItem.palavra
     );
 
-    const incorrectItem = incorrectPool
+    const incorrectItems = incorrectPool
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
 
-    const options = [
-      correctItem.palavra,
-      ...incorrectItem.map((item) => item.palavra),
-    ].sort(() => Math.random() - 0.5);
+    const options = [correctItem, ...incorrectItems]
+      .map((item) => ({
+        id: item.palavra, // identificador único
+        palavra: item.palavra,
+      }))
+      .sort(() => Math.random() - 0.5);
 
     return {
-      video: correctItem.video,
-      palavra: correctItem.palavra,
+      correct: {
+        id: correctItem.palavra,
+        palavra: correctItem.palavra,
+        video: correctItem.video,
+      },
       options,
     };
   }

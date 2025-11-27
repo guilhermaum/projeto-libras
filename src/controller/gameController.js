@@ -7,6 +7,8 @@ export default class GameController {
     this.usedCorrectWords = new Set();
     this.currentIndex = 0;
     this.rounds = [];
+    this.wrongRounds = [];
+    this.reviewMode = false;
   }
 
   async loadSignals() {
@@ -74,10 +76,26 @@ export default class GameController {
       this.currentIndex++;
       return this.getCurrentRound();
     }
+
+    if (this.wrongRounds.length > 0) {
+      this.rounds = [...this.rounds, ...this.wrongRounds];
+
+      this.wrongRounds = [];
+
+      this.currentIndex++;
+      return this.getCurrentRound();
+    }
+
     return null;
   }
 
   validateAnswer(optionId) {
-    return optionId === this.getCurrentRound().correct.id;
+    const correctId = this.getCurrentRound().correct.id;
+
+    if (correctId === optionId) return correctId;
+
+    this.wrongRounds.push(this.getCurrentRound());
+    console.log(this.wrongRounds);
+    return null;
   }
 }

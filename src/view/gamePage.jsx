@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import GameController from "../controller/gameController";
+import { useTimer } from "../hooks/timer";
 
 export default function GamePage() {
   const [controller, setController] = useState(null);
@@ -16,6 +17,9 @@ export default function GamePage() {
     false,
     false,
   ]);
+  const [score, setScore] = useState(0);
+  const time = useTimer();
+  const [isBuildingRound, setIsBuildingRound] = useState(true);
 
   const COLOR_SET = [
     "#F04C47",
@@ -69,6 +73,8 @@ export default function GamePage() {
 
     if (!round) return;
 
+    queueMicrotask(() => setIsBuildingRound(true));
+
     const newColors = shuffleColorsAvoidRepeat();
     const newWords = round.option.map((o) => o.palavra);
 
@@ -98,6 +104,10 @@ export default function GamePage() {
           setWords((prev) => {
             const update = [...prev];
             update[index] = newWords[index];
+
+            if (index === newWords.length - 1) {
+              setTimeout(() => setIsBuildingRound(false), 150);
+            }
             return update;
           });
         }, 250);
@@ -111,9 +121,9 @@ export default function GamePage() {
     const isCorrect = controller.validateAnswer(optionId);
 
     if (isCorrect) {
-      console.log("ok");
+      setScore((prev) => prev + 1);
     } else {
-      alert("❌ Errou!");
+      console.log();
     }
 
     const next = controller.nextRound();
@@ -131,49 +141,87 @@ export default function GamePage() {
   if (!round) return <p>Carregando round...</p>;
 
   return (
-    <div className="w-screen h-screen grid grid-cols-2 grid-rows-2 relative select-none overflow-hidden">
-      {round.option.map((option, index) => (
-        <div
-          key={option.id}
-          ref={(el) => (optionRefs.current[index] = el)}
-          onClick={() => handleAnswer(option.id)}
-          className="
+    <div className="relative w-screen h-screen bg-red-500">
+      <div className="absolute top-8 right-8 z-50 text-whit text-7xl font-nabanar text-outline">
+        {score}
+        <div className="text-4xl mt-2 relative right-4">
+          {String(Math.floor(time / 60)).padStart(2, "0")}:
+          {String(time % 60).padStart(2, "0")}
+        </div>
+      </div>
+
+      <div className="w-screen h-screen grid grid-cols-2 grid-rows-2 relative select-none overflow-hidden">
+        {round.option.map((option, index) => (
+          <div
+            key={option.id}
+            ref={(el) => (optionRefs.current[index] = el)}
+            onClick={() => handleAnswer(option.id)}
+            className="
             w-full h-full flex items-center justify-center 
             relative cursor-pointer transition-colors duration-700
             after:absolute after:bottom-0 after:left-0 
             after:w-full after:h-6 after:bg-white
             after:scale-x-0 after:transition-transform after:duration-500 
-            hover:after:scale-x-100 after:d-4
+            hover:after:scale-x-100
           "
-          style={{ backgroundColor: colors[index] }}
-        >
-          <span
-            key={words[index]}
-            className={`font-wonderful text-5xl text-white drop-shadow-lg word-enter ${
-              animateWords[index] ? "word-enter-active" : ""
-            }
-  `}
+            style={{ backgroundColor: colors[index] }}
           >
-            {words[index]}
-          </span>
-        </div>
-      ))}
+            <span
+              key={words[index]}
+              className={`font-wonderful text-5xl text-white drop-shadow-lg word-enter ${
+                animateWords[index] ? "word-enter-active" : ""
+              }
+  `}
+            >
+              {words[index]}
+            </span>
+          </div>
+        ))}
+        <div
+          className="
+    absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-outline
+    w-[350px] h-[350px] rounded-2xl shadow-2xl overflow-hidden 
+    bg-black flex items-center justify-center border-4 border-white/50
+  "
+        >
+          {/* vídeo sempre presente por trás */}
+          <video
+            ref={videoRef}
+            src={round.correct.video}
+            autoPlay
+            loop
+            muted
+            // aplica blur/dimming/scale enquanto isBuildingRound for true
+            className={`
+      w-full h-full object-cover transition-all duration-500 ease-out
+      ${
+        isBuildingRound
+          ? "filter blur-sm scale-95 brightness-75"
+          : "filter blur-0 scale-100 brightness-100"
+      }
+    `}
+          />
 
-      <div
-        className="
-          absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-          w-[350px] h-[350px] rounded-2xl shadow-2xl overflow-hidden 
-          bg-black flex items-center justify-center border-4 border-white/50
-        "
-      >
-        <video
-          ref={videoRef}
-          src={round.correct.video}
-          autoPlay
-          loop
-          muted
-          className="w-full h-full object-cover"
-        />
+          {/* overlay com blur/backdrop + spinner (visível somente enquanto isBuildingRound) */}
+          <div
+            className={`
+      absolute inset-0 flex items-center justify-center transition-opacity duration-500
+      ${
+        isBuildingRound
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+      }
+    `}
+          >
+            {/* fundo semi-transparente + efeito de backdrop blur (se quiser blur extra) */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+            {/* conteúdo do loading */}
+            <div className="relative z-10 flex flex-col items-center justify-center text-white">
+              <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export default class GameController {
     this.currentIndex = 0;
     this.score = 0;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < this.signals.length; i++) {
       this.rounds.push(this._createRoundInternal());
     }
 

@@ -29,9 +29,9 @@ export default function GamePage() {
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const feedbackTimeoutsRef = useRef([]);
 
-  const FEEDBACK_ENTER_MS = 180;
-  const FEEDBACK_VISIBLE_MS = 380;
-  const FEEDBACK_EXIT_MS = 180;
+  const FEEDBACK_ENTER_MS = 200;
+  const FEEDBACK_VISIBLE_MS = 700;
+  const FEEDBACK_EXIT_MS = 200;
   const FEEDBACK_TOTAL_MS =
     FEEDBACK_ENTER_MS + FEEDBACK_VISIBLE_MS + FEEDBACK_EXIT_MS;
 

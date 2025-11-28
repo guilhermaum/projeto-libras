@@ -1,10 +1,10 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import GamePage from "./view/gamePage";
+import { BrowserRouter } from "react-router-dom";
+import AppRoute from "./routes/AppRoute";
 
 createRoot(document.getElementById("root")).render(
-  <div>
-    <GamePage />
-  </div>
+  <BrowserRouter>
+    <AppRoute />
+  </BrowserRouter>
 );

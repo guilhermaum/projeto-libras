@@ -9,6 +9,7 @@ export default class GameController {
     this.rounds = [];
     this.wrongRounds = [];
     this.reviewMode = false;
+    this.score = 0;
   }
 
   async loadSignals() {
@@ -23,8 +24,9 @@ export default class GameController {
     this.usedCorrectWords.clear();
     this.rounds = [];
     this.currentIndex = 0;
+    this.score = 0;
 
-    for (let i = 0; i < this.signals.length; i++) {
+    for (let i = 0; i < 3; i++) {
       this.rounds.push(this._createRoundInternal());
     }
 
@@ -92,10 +94,17 @@ export default class GameController {
   validateAnswer(optionId) {
     const correctId = this.getCurrentRound().correct.id;
 
-    if (correctId === optionId) return correctId;
+    if (correctId === optionId) {
+      this.score++;
+      return correctId;
+    }
 
     this.wrongRounds.push(this.getCurrentRound());
     console.log(this.wrongRounds);
     return null;
+  }
+
+  getScore() {
+    return this.score;
   }
 }

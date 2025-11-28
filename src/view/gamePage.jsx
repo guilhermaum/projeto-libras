@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import GameController from "../controller/gameController";
 import { useTimer } from "../hooks/timer";
+import useNavigation from "../hooks/useNavigation";
+import thumbsUp from "../assets/images/thumbs-up.png";
+import thumbsDown from "../assets/images/thumbs-down.png";
 
 export default function GamePage() {
   const [controller, setController] = useState(null);
@@ -20,6 +23,52 @@ export default function GamePage() {
   const [score, setScore] = useState(0);
   const time = useTimer();
   const [isBuildingRound, setIsBuildingRound] = useState(true);
+  const { goScore } = useNavigation();
+
+  const [feedbackImg, setFeedbackImg] = useState(null);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const feedbackTimeoutsRef = useRef([]);
+
+  const FEEDBACK_ENTER_MS = 180;
+  const FEEDBACK_VISIBLE_MS = 380;
+  const FEEDBACK_EXIT_MS = 180;
+  const FEEDBACK_TOTAL_MS =
+    FEEDBACK_ENTER_MS + FEEDBACK_VISIBLE_MS + FEEDBACK_EXIT_MS;
+
+  function playFeedback(imgSrc, cb) {
+    feedbackTimeoutsRef.current.forEach((t) => clearTimeout(t));
+    feedbackTimeoutsRef.current = [];
+
+    // garante que sempre começará "fora da tela"
+    setFeedbackVisible(false);
+
+    // define nova imagem
+    setFeedbackImg(imgSrc);
+
+    // próximo frame → anima entrada
+    requestAnimationFrame(() => setFeedbackVisible(true));
+
+    // saída
+    const tExit = setTimeout(() => {
+      setFeedbackVisible(false);
+    }, FEEDBACK_ENTER_MS + FEEDBACK_VISIBLE_MS);
+
+    // fim total
+    const tEnd = setTimeout(() => {
+      setFeedbackImg(null);
+      if (typeof cb === "function") cb();
+    }, FEEDBACK_TOTAL_MS);
+
+    feedbackTimeoutsRef.current.push(tExit, tEnd);
+  }
+
+  // limpar timeouts no unmount (adicione ao useEffect que já existe ou crie um)
+  useEffect(() => {
+    return () => {
+      feedbackTimeoutsRef.current.forEach((t) => clearTimeout(t));
+      feedbackTimeoutsRef.current = [];
+    };
+  }, []);
 
   const COLOR_SET = [
     "#F04C47",
@@ -119,26 +168,43 @@ export default function GamePage() {
     if (!controller) return;
 
     const isCorrect = controller.validateAnswer(optionId);
+    const imgFor = isCorrect ? thumbsUp : thumbsDown;
 
     if (isCorrect) {
-      setScore((prev) => prev + 1);
-    } else {
-      console.log();
+      const newScore = controller.getScore();
+      setScore(newScore);
     }
 
-    const next = controller.nextRound();
+    const advanceAfterFeedback = () => {
+      const next = controller.nextRound();
 
-    if (!next) {
-      alert("Fim do jogo!");
-      return;
-    }
+      if (!next) {
+        return goScore({
+          pontuacao: controller.getScore(),
+          tempo: time,
+        });
+      }
 
-    setRound(next);
+      setRound(next);
+    };
+
+    playFeedback(imgFor, advanceAfterFeedback);
   }
 
-  if (loading) return <p>Carregando...</p>;
-  if (error) return <p className="text-red-500">Erro: {error}</p>;
-  if (!round) return <p>Carregando round...</p>;
+  if (loading) {
+    return (
+      <div className="w-screen h-screen bg-[#f0554f] flex items-center justify-center">
+        <div className="w-20 h-20 border-4 border-white/40 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="w-screen h-screen bg-red-700 flex items-center justify-center">
+        <p className="text-white text-3xl font-bold">Erro: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-screen h-screen bg-red-500">
@@ -177,6 +243,21 @@ export default function GamePage() {
             </span>
           </div>
         ))}
+        <img
+          src={feedbackImg}
+          alt="feedback"
+          className={`
+  absolute top-1/2 z-50 w-[220px] h-[220px] object-contain
+  -translate-y-1/2 transition-transform
+  duration-300 ease-[cubic-bezier(.22,.61,.36,1)]
+  ${
+    feedbackVisible
+      ? "translate-x-[-10%] opacity-100"
+      : "translate-x-[-150%] opacity-0"
+  }
+`}
+        />
+
         <div
           className="
     absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-outline

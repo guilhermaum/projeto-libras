@@ -1,31 +1,67 @@
 @import "tailwindcss";
 
+/* =============================
+   FONTES
+============================= */
+
 @font-face {
   font-family: "Nabana";
-  src: url("./assets/fonts/Nabana-Shadow.ttf");
+  src: url("./assets/fonts/Nabana-Shadow.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Nabana Regular";
-  src: url("./assets/fonts/Nabana-Regular.ttf");
+  src: url("./assets/fonts/Nabana-Regular.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Wonderful";
-  src: url("./assets/fonts/WonderfulSnowflakeRegular-1jVA2.otf");
+  src: url("./assets/fonts/WonderfulSnowflakeRegular-1jVA2.otf")
+    format("opentype");
+  font-display: swap;
 }
+
+/* CORREÇÃO DA CHEWY */
+@font-face {
+  font-family: "ChewyFont";
+  src: url("./assets/fonts/Chewy-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+/* =============================
+   TAILWIND CUSTOM UTILITIES
+============================= */
 
 @layer utilities {
   .text-outline {
     -webkit-text-stroke: 3px black;
   }
+
+  .stroke-2 {
+    text-shadow: -3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000;
+  }
+
+  .stroke-3 {
+    text-shadow: -3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000;
+  }
 }
+
+/* =============================
+   THEME VARIABLES
+============================= */
 
 @theme {
   --font-nabana: "Nabana", sans-serif;
   --font-nabanar: "Nabana Regular", sans-serif;
   --font-wonderful: "Wonderful", sans-serif;
+  --font-chewy: "ChewyFont", sans-serif;
 }
+
+/* =============================
+   ANIMAÇÕES
+============================= */
 
 .word-enter {
   opacity: 0;
@@ -36,4 +72,54 @@
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.duolibras-stroke {
+  -webkit-text-stroke: 18px #000;
+  paint-order: stroke fill;
+}
+
+/* LETRAS ANIMADAS */
+
+@keyframes burst-in {
+  0% {
+    opacity: 0;
+    transform: translateY(100px) scale(0);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0px) scale(1.1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animated-letter {
+  display: inline-block;
+  animation: burst-in 0.8s ease-out forwards;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+
+/* FADE IN */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up-animation {
+  animation: fade-in-up 0.5s ease-out forwards;
+  opacity: 0;
+  will-change: transform, opacity;
 }
